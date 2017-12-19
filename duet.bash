@@ -15,6 +15,16 @@ duet() {
   fi
 }
 
+duet_whoami() {
+  echo "You're the following author and committer:"
+  echo "$GIT_AUTHOR_NAME"
+  echo "$GIT_AUTHOR_EMAIL"
+  echo "$GIT_COMMITTER_NAME"
+  echo "$GIT_COMMITTER_EMAIL"
+}
+
+# usage: duet_set firstinits secondinits
+# Sets the duet configuration according to the initials you give it
 duet_set() {
   local author_initials committer_initials
   author_initials="${1:?"Expected author initials argument in duet_set"}"
@@ -29,12 +39,21 @@ duet_set() {
   GIT_COMMITTER_EMAIL="$(duet_get_email "$committer_initials")"
 }
 
-duet_whoami() {
-  echo "You're the following author and committer:"
-  echo "$GIT_AUTHOR_NAME"
-  echo "$GIT_AUTHOR_EMAIL"
-  echo "$GIT_COMMITTER_NAME"
-  echo "$GIT_COMMITTER_EMAIL"
+# usage: duet_save_state firstinits secondinits
+# Given two sets of initials, saves that duet configuration in the filesystem
+duet_save_state() {
+  local author_initials committer_initials
+  author_initials="${1:?"Expected author initials argument in duet_set"}"
+  committer_initials="${2:?"Expected committer initials argument in duet_set"}"
+  echo "duet_set \"$author_initials\" \"$committer_initials\"
+duet_randomize_authors" | duet_state_writer
+}
+
+duet_randomize_authors() {
+  for _ in $(seq $(( RANDOM % 2 )) )
+  do
+    duet_rotate_authors
+  done
 }
 
 duet_rotate_authors() {
@@ -45,13 +64,6 @@ duet_rotate_authors() {
   export GIT_AUTHOR_EMAIL="${GIT_COMMITTER_EMAIL}"
   export GIT_COMMITTER_NAME="${name}"
   export GIT_COMMITTER_EMAIL="${email}"
-}
-
-duet_randomize_authors() {
-  for _ in $(seq $(( RANDOM % 2 )) )
-  do
-    duet_rotate_authors
-  done
 }
 
 # usage: duet_get_name initials
@@ -72,16 +84,6 @@ duet_get_email() {
   duet_git_authors | grep "^$initials" | \
     cut -d ";" -f 3 | \
     xargs # trims whitespace from beginning and end of the line
-}
-
-# usage: duet_save_state firstinits secondinits
-# Given two sets of initials, saves that duet configuration in the filesystem
-duet_save_state() {
-  local author_initials committer_initials
-  author_initials="${1:?"Expected author initials argument in duet_set"}"
-  committer_initials="${2:?"Expected committer initials argument in duet_set"}"
-  echo "duet_set \"$author_initials\" \"$committer_initials\"
-duet_randomize_authors" | duet_state_writer
 }
 
 # override this to unit test this file

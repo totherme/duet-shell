@@ -28,6 +28,31 @@ T_duet_with_no_args_calls_duet_whoami() {
   )
 }
 
+T_duet_with_one_arg_calls_duet_set_and_save_with_that_arg_twice() {
+  (
+    set_arg1="set not called yet"
+    set_arg2="set not called yet"
+    duet_set() {
+      set_arg1=$1
+      set_arg2=$2
+    }
+
+    save_arg1="save hasn't been called yet"
+    save_arg2="save hasn't been called yet"
+    duet_save_state() {
+      save_arg1=$1
+      save_arg2=$2
+    }
+
+    duet onlyarg
+
+    expect_to_equal "$set_arg1" "onlyarg" &&
+      expect_to_equal "$set_arg2" "onlyarg" &&
+      expect_to_equal "$save_arg1" "onlyarg" &&
+      expect_to_equal "$save_arg2" "onlyarg"
+  )
+}
+
 T_duet_with_two_args_calls_duet_set_randomize_and_save() {
   (
     set_arg1="set not called yet"
@@ -56,31 +81,6 @@ T_duet_with_two_args_calls_duet_set_randomize_and_save() {
       expect_to_equal "$randomize_called" "called" &&
       expect_to_equal "$save_arg1" "firstarg" &&
       expect_to_equal "$save_arg2" "secondarg"
-  )
-}
-
-T_duet_with_one_arg_calls_duet_set_and_save_with_that_arg_twice() {
-  (
-    set_arg1="set not called yet"
-    set_arg2="set not called yet"
-    duet_set() {
-      set_arg1=$1
-      set_arg2=$2
-    }
-
-    save_arg1="save hasn't been called yet"
-    save_arg2="save hasn't been called yet"
-    duet_save_state() {
-      save_arg1=$1
-      save_arg2=$2
-    }
-
-    duet onlyarg
-
-    expect_to_equal "$set_arg1" "onlyarg" &&
-      expect_to_equal "$set_arg2" "onlyarg" &&
-      expect_to_equal "$save_arg1" "onlyarg" &&
-      expect_to_equal "$save_arg2" "onlyarg"
   )
 }
 
@@ -114,18 +114,19 @@ T_duet_set_sets_all_vars() {
   )
 }
 
-T_rotate_authors_rotates_committer_and_author() {
+T_save_state_saves_initials_and_randomize() {
   (
-    GIT_AUTHOR_NAME="Author Person" \
-    GIT_COMMITTER_NAME="Committer Person" \
-    GIT_AUTHOR_EMAIL="author@place" \
-    GIT_COMMITTER_EMAIL="committer@place" \
-    duet_rotate_authors
+    tmpdir="$(mktemp -d)"
+    # shellcheck disable=SC2064
+    trap "rm -r $tmpdir" EXIT
+    duet_state_writer() {
+      cat > "$tmpdir/test-data"
+    }
 
-    expect_to_equal "$GIT_AUTHOR_NAME" "Committer Person" &&
-      expect_to_equal "$GIT_COMMITTER_NAME" "Author Person" &&
-      expect_to_equal "$GIT_AUTHOR_EMAIL" "committer@place" &&
-      expect_to_equal "$GIT_COMMITTER_EMAIL" "author@place"
+    duet_save_state inits1 inits2
+
+    expect_to_equal "$(cat "$tmpdir/test-data")" "duet_set \"inits1\" \"inits2\"
+duet_randomize_authors"
   )
 }
 
@@ -152,21 +153,19 @@ T_randomize_authors_rotates_authors_some_random_amount() {
   )
 }
 
-T_save_state_saves_initials_and_randomize() {
+T_rotate_authors_rotates_committer_and_author() {
   (
-    tmpdir="$(mktemp -d)"
-    # shellcheck disable=SC2064
-    trap "rm -r $tmpdir" EXIT
-    duet_state_writer() {
-      cat > "$tmpdir/test-data"
-    }
+    GIT_AUTHOR_NAME="Author Person" \
+    GIT_COMMITTER_NAME="Committer Person" \
+    GIT_AUTHOR_EMAIL="author@place" \
+    GIT_COMMITTER_EMAIL="committer@place" \
+    duet_rotate_authors
 
-    duet_save_state inits1 inits2
-
-    expect_to_equal "$(cat "$tmpdir/test-data")" "duet_set \"inits1\" \"inits2\"
-duet_randomize_authors"
+    expect_to_equal "$GIT_AUTHOR_NAME" "Committer Person" &&
+      expect_to_equal "$GIT_COMMITTER_NAME" "Author Person" &&
+      expect_to_equal "$GIT_AUTHOR_EMAIL" "committer@place" &&
+      expect_to_equal "$GIT_COMMITTER_EMAIL" "author@place"
   )
-
 }
 
 T_get_name_gets_a_given_name() {
@@ -186,7 +185,6 @@ T_get_email_gets_a_given_email() {
     expect_to_equal "$(duet_get_email "ghi")" \
       "greta@awesome.com"
 }
-
 
 expect_to_equal() {
   local actual expected diff_output diff_exit
