@@ -59,7 +59,7 @@ duet_randomize_authors() {
 duet_get_name() {
   local initials
   initials="${1:?"Expected initials argument in duet_get_name"}"
-  duet_git_authors | grep "$initials" | \
+  duet_git_authors | grep "^$initials" | \
     cut -d ";" -f 2 | \
     xargs # trims whitespace from beginning and end of the line
 }
@@ -69,7 +69,7 @@ duet_get_name() {
 duet_get_email() {
   local initials
   initials="${1:?"Expected initials argument in duet_get_email"}"
-  duet_git_authors | grep "$initials" | \
+  duet_git_authors | grep "^$initials" | \
     cut -d ";" -f 3 | \
     xargs # trims whitespace from beginning and end of the line
 }

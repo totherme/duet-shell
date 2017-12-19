@@ -11,6 +11,7 @@ duet_git_authors() {
 abc; Alice Beatrice Cromwell ; alice@awesome.com
 def; Derick Edward Farroe ; derick@awesome.com
 ghi; Greta Hillary Innes ; greta@awesome.com
+jkl; James Kevin Landsdowne ; j@abc.com
 "
 }
 
