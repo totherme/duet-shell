@@ -7,9 +7,11 @@ duet() {
   elif [[ $# -eq 1 ]]
   then
     duet_set "$1" "$1"
+    duet_save_state "$1" "$1"
   else
     duet_set "$@"
     duet_randomize_authors
+    duet_save_state "$@"
   fi
 }
 
@@ -72,7 +74,22 @@ duet_get_email() {
     xargs # trims whitespace from beginning and end of the line
 }
 
+# usage: duet_save_state firstinits secondinits
+# Given two sets of initials, saves that duet configuration in the filesystem
+duet_save_state() {
+  local author_initials committer_initials
+  author_initials="${1:?"Expected author initials argument in duet_set"}"
+  committer_initials="${2:?"Expected committer initials argument in duet_set"}"
+  echo "duet_set \"$author_initials\" \"$committer_initials\"
+duet_randomize_authors" | duet_state_writer
+}
+
 # override this to unit test this file
 duet_git_authors() {
   cat "$HOME/.git-authors"
+}
+
+# override this to unit test this file
+duet_state_writer() {
+  cat > "$HOME/.git-duet-bash-state"
 }

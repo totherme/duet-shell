@@ -27,7 +27,7 @@ T_duet_with_no_args_calls_duet_whoami() {
   )
 }
 
-T_duet_with_two_args_calls_duet_set_then_randomize() {
+T_duet_with_two_args_calls_duet_set_randomize_and_save() {
   (
     set_arg1="set not called yet"
     set_arg2="set not called yet"
@@ -41,27 +41,45 @@ T_duet_with_two_args_calls_duet_set_then_randomize() {
       randomize_called="called"
     }
 
+    save_arg1="save hasn't been called yet"
+    save_arg2="save hasn't been called yet"
+    duet_save_state() {
+      save_arg1=$1
+      save_arg2=$2
+    }
+
     duet firstarg secondarg
 
     expect_to_equal "$set_arg1" "firstarg" &&
       expect_to_equal "$set_arg2" "secondarg" &&
-      expect_to_equal "$randomize_called" "called"
+      expect_to_equal "$randomize_called" "called" &&
+      expect_to_equal "$save_arg1" "firstarg" &&
+      expect_to_equal "$save_arg2" "secondarg"
   )
 }
 
-T_duet_with_one_arg_calls_duet_set_with_that_arg_twice() {
+T_duet_with_one_arg_calls_duet_set_and_save_with_that_arg_twice() {
   (
-    arg1="set not called yet"
-    arg2="set not called yet"
+    set_arg1="set not called yet"
+    set_arg2="set not called yet"
     duet_set() {
-      arg1=$1
-      arg2=$2
+      set_arg1=$1
+      set_arg2=$2
     }
 
-    duet firstarg
+    save_arg1="save hasn't been called yet"
+    save_arg2="save hasn't been called yet"
+    duet_save_state() {
+      save_arg1=$1
+      save_arg2=$2
+    }
 
-    expect_to_equal "$arg1" "firstarg" &&
-      expect_to_equal "$arg2" "firstarg"
+    duet onlyarg
+
+    expect_to_equal "$set_arg1" "onlyarg" &&
+      expect_to_equal "$set_arg2" "onlyarg" &&
+      expect_to_equal "$save_arg1" "onlyarg" &&
+      expect_to_equal "$save_arg2" "onlyarg"
   )
 }
 
@@ -131,6 +149,23 @@ T_randomize_authors_rotates_authors_some_random_amount() {
       return 1
     fi
   )
+}
+
+T_save_state_saves_initials_and_randomize() {
+  (
+    tmpdir="$(mktemp -d)"
+    # shellcheck disable=SC2064
+    trap "rm -r $tmpdir" EXIT
+    duet_state_writer() {
+      cat > "$tmpdir/test-data"
+    }
+
+    duet_save_state inits1 inits2
+
+    expect_to_equal "$(cat "$tmpdir/test-data")" "duet_set \"inits1\" \"inits2\"
+duet_randomize_authors"
+  )
+
 }
 
 T_get_name_gets_a_given_name() {
