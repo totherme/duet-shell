@@ -4,11 +4,14 @@ This is a partial re-implementation of [git
 duet](https://github.com/git-duet/git-duet).
 
 Git duet is handy when pair-programming. Both engineers in the pair get their
-names on all the commits. Unfortunately, the current implementation of git-duet
-does not play nicely with git rebase. When doing trunk-based development as
-part of an XP workflow, this is often not an issue. However, when contributing
-to open source projects with a PR-based workflow, large rebases happen
-frequently.
+names on all the commits. ~~Unfortunately, the current implementation of
+git-duet does not play nicely with git rebase. When doing trunk-based
+development as part of an XP workflow, this is often not an issue. However,
+when contributing to open source projects with a PR-based workflow, large
+rebases happen frequently.~~ If you want to do rebases with [git
+duet](https://github.com/git-duet/git-duet), you should probably `export
+GIT_DUET_SET_GIT_USER_CONFIG=1`. Alternatively, you can use this bash
+re-implementation.
 
 By re-implementing git duet in bash, we can interface with git using
 environment variables, rather than requiring a new commit binary. This means
